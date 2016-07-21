@@ -1,9 +1,10 @@
 ### https://raw.github.com/github/gitignore/f93202c42e947f3be10b3bd6912b48e30e7e9781/elisp.gitignore
 
+# temporary emacs files
+.#*
+
 # Compiled
 *.elc
 
 # Packaging
 .cask
-
-
