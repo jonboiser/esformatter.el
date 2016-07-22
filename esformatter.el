@@ -7,6 +7,7 @@
   (forward-line (1- line)))
 
 ;; delete the current line without putting it in the kill-ring
+;; copied from go-mode.el
 (defun esfmt--delete-whole-line (&optional arg)
   "Delete the current line without putting it in the `kill-ring'.
 Derived from function `kill-whole-line'.  ARG is defined as for that
@@ -33,19 +34,10 @@ function."
          (delete-region (progn (forward-visible-line 0) (point))
                         (progn (forward-visible-line arg) (point))))))
 
+;; copied from go-mode.el
 (defun esfmt--apply-rcs-patch (patch-buffer)
   "Apply an RCS-formatted diff from PATCH-BUFFER to the current buffer."
   (let ((target-buffer (current-buffer))
-        ;; Relative offset between buffer line numbers and line numbers
-        ;; in patch.
-        ;;
-        ;; Line numbers in the patch are based on the source file, so
-        ;; we have to keep an offset when making changes to the
-        ;; buffer.
-        ;;
-        ;; Appending lines decrements the offset (possibly making it
-        ;; negative), deleting lines increments it. This order
-        ;; simplifies the forward-line invocations.
         (line-offset 0))
     (save-excursion
       (with-current-buffer patch-buffer
@@ -74,7 +66,6 @@ function."
                 (esfmt--delete-whole-line len)))
              (t
               (error "invalid rcs patch or internal error in esfmt--apply-rcs-patch")))))))))
-
 
 (defun esformatter ()
   "Formats the current buffer with esformatter."
@@ -106,6 +97,7 @@ function."
     ;; apply diff to current buffer
     (esfmt--apply-rcs-patch patchbuff)
 
+    ;; clean up
     (kill-buffer errbuff)
     (kill-buffer patchbuf)
     (delete-file tmpfile)))
