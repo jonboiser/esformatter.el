@@ -1,4 +1,4 @@
-(defcustom esfmt-command "esformatter"
+(defcustom esformatter-command "esformatter"
   "The esformatter command."
   :type 'string :group 'js)
 
@@ -76,33 +76,36 @@ function."
               (error "invalid rcs patch or internal error in esfmt--apply-rcs-patch")))))))))
 
 
-(defun run-esfmt ()
+(defun esformatter ()
   "Formats the current buffer with esformatter."
   (interactive)
-  (let ((tmpfile  (make-tempfile "esformatter--" nil ".js"))
-        (patchbuf (get-buffer-create "*esformatter patch*"))
-        (errbuf   (get-buffer-create "*esformatter errors*"))
+  (let ((tmpfile   (make-temp-file "esformatter--" nil ".js"))
+        (patchbuff (get-buffer-create "*esformatter patch*"))
+        (errbuff   (get-buffer-create "*esformatter errors*"))
         (coding-system-for-read  'utf-8)
-        (coding-system-for-write 'utf-8)))
+        (coding-system-for-write 'utf-8))
 
-  (with-current-buffer errbuff
-    (setq buffer-read-only nil)
-    (erase-buffer))
+    (with-current-buffer errbuff
+      (setq buffer-read-only nil)
+      (erase-buffer))
 
-  (with-current-buffer patchbuf
-    (erase-buffer))
+    (with-current-buffer patchbuff
+      (erase-buffer))
 
-  ;; write current buffer to the tmpfile
-  (write-region nil nil tmpfile)
+    ;; write current buffer to the tmpfile
+    (write-region nil nil tmpfile)
 
-  ;; happy path command
-  ;; write formatted file to errbuf
-  (call-process esformatter-command nil errbuf nil tmpfile)
-  ;; write diff to patchbuf. argument -n means format as RCS diff
-  (call-process-region
-    (point-min) (point-max)
-    "diff" nil patchbuf nil "-n" "-" tmpfile)
-  ;; apply diff to current buffer
-  (esfmt--apply-rcs-patch patchbuf)
-  (kill-buffer patchbuf)
-  (delete-file tmpfile))
+    ;; overwrite tmpfile, and save contents to errbuff
+    (call-process esformatter-command nil errbuff nil "-i" tmpfile)
+
+    ;; take file being edited, diff it with errbuff, write result to patchbuff
+    (call-process-region
+                (point-min) (point-max)
+                "diff" nil patchbuff nil "-n" "-" tmpfile)
+
+    ;; apply diff to current buffer
+    (esfmt--apply-rcs-patch patchbuff)
+
+    (kill-buffer errbuff)
+    (kill-buffer patchbuf)
+    (delete-file tmpfile)))
